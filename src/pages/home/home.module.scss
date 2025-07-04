@@ -1,0 +1,12 @@
+@import 'src/styles/variables.scss';
+
+.home {
+  height: 100vh;
+  @include flex(column, center, center);
+  gap: 24px;
+}
+.title {
+  text-align: center;
+  color: $primary;
+  padding-top: 56px;
+}

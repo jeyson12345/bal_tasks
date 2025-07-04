@@ -1,0 +1,47 @@
+@import './variables.scss';
+@import './help.scss';
+
+*,
+:after,
+:before {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: $font-primary !important;
+}
+
+html,
+body {
+  scroll-behavior: smooth;
+}
+
+p,
+ul,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin-bottom: 0;
+}
+
+a {
+  text-decoration: none;
+}
+
+.root {
+  min-height: 100vh;
+  // overflow-x: hidden;
+}
+
+.container {
+  max-width: 1280px;
+  padding-right: 12px;
+  padding-left: 12px;
+  margin: 0 auto;
+}
+
+.input {
+  outline: none !important;
+}
