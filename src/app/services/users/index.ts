@@ -26,6 +26,9 @@ export const authApi = api.injectEndpoints({
       query: (params) => ({ url: `/tasks/?${params}` }),
       providesTags: ['tasks'],
     }),
+    getTaskID: build.query<ITask, string>({
+      query: (id) => ({ url: `/tasks/${id}/` }),
+    }),
     updateStatus: build.mutation<any, { id: number; body: { status: string } }>(
       {
         query: ({ id, body }) => ({
@@ -49,6 +52,7 @@ export const {
   useLoginConfigMutation,
 
   useGetTasksQuery,
+  useGetTaskIDQuery,
   useUpdateStatusMutation,
 
   useGetUsersQuery,

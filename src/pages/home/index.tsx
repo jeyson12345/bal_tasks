@@ -1,12 +1,26 @@
-import { Avatar, Layout, Menu, Select, Table, theme } from 'antd';
+import {
+  Avatar,
+  Drawer,
+  Empty,
+  Flex,
+  Input,
+  Layout,
+  Menu,
+  Select,
+  Table,
+  theme,
+} from 'antd';
 import { UserOutlined } from '@ant-design/icons';
 import useParamsHook from 'src/hooks/params';
 import {
+  useGetTaskIDQuery,
   useGetTasksQuery,
   useGetUsersQuery,
   useUpdateStatusMutation,
 } from 'src/app/services/users';
 import PaginationFilter from 'src/components/common/PaginationFilter';
+import { Link } from 'react-router-dom';
+import { useState } from 'react';
 
 const { Header, Content } = Layout;
 
@@ -14,13 +28,17 @@ const HomePage = ({ taskPage = false }: { taskPage?: boolean }) => {
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
-  const { searchParams, navigate } = useParamsHook();
+  const { searchParams, navigate, handleMakeParams } = useParamsHook();
 
   // GET users
   const { data: users, isLoading: sLoad } = useGetUsersQuery(
-    searchParams.toString(),
+    searchParams.toString()
+  );
+  const [taskID, setTaskID] = useState<number | null>(null);
+  const { data: taskDetail, isLoading: taskLoad } = useGetTaskIDQuery(
+    String(taskID),
     {
-      skip: taskPage,
+      skip: !taskID,
     }
   );
 
@@ -39,6 +57,11 @@ const HomePage = ({ taskPage = false }: { taskPage?: boolean }) => {
       title: 'Yaratuvchi nomi',
       dataIndex: 'created_by_name',
       key: 'created_by_name',
+      render: (val: any, record: any) => (
+        <Link to={'#'} onClick={() => setTaskID(record?.id)}>
+          {val}
+        </Link>
+      ),
     },
     {
       title: 'Sana',
@@ -138,6 +161,54 @@ const HomePage = ({ taskPage = false }: { taskPage?: boolean }) => {
             overflowY: 'scroll',
           }}
         >
+          <Flex justify="end" gap={16} style={{ marginBottom: 16 }}>
+            <Input.Search
+              placeholder={`Matnlar, feedbacklar bo'yich qidirish`}
+              enterButton="Qidirish"
+              onSearch={(val) => handleMakeParams('search', val)}
+              defaultValue={searchParams.get('search') || ''}
+              allowClear
+            />
+
+            <Select
+              allowClear
+              placeholder="Mas'ul shaxs !"
+              onChange={(val) => handleMakeParams('responsible_user', val)}
+              style={{ width: 200, flexShrink: 0 }}
+              defaultValue={searchParams.get('responsible_user')}
+              options={users?.results?.map((item) => ({
+                label: item?.full_name,
+                value: item?.id,
+              }))}
+            />
+
+            <Select
+              allowClear
+              placeholder="Taskni kim yaratgan"
+              onChange={(val) => handleMakeParams('created_by', val)}
+              style={{ width: 200, flexShrink: 0 }}
+              defaultValue={searchParams.get('created_by')}
+              options={users?.results?.map((item) => ({
+                label: item?.full_name,
+                value: item?.id,
+              }))}
+            />
+
+            <Select
+              allowClear
+              placeholder="Statusni tanlang !"
+              onChange={(val) => handleMakeParams('status', val)}
+              style={{ width: 200, flexShrink: 0 }}
+              defaultValue={searchParams.get('status')}
+              options={[
+                { label: 'Yangi', value: 'new' },
+                { label: 'Jarayonda', value: 'in_progress' },
+                { label: 'Yakunlandi', value: 'completed' },
+                { label: 'Bekor qilindi', value: 'cancelled ' },
+              ]}
+            />
+          </Flex>
+
           <Table
             rowKey={'id'}
             pagination={false}
@@ -149,8 +220,102 @@ const HomePage = ({ taskPage = false }: { taskPage?: boolean }) => {
           <PaginationFilter total={taskPage ? tasks?.count : users?.count} />
         </div>
       </Content>
+
+      <Drawer
+        loading={taskLoad || !taskDetail}
+        width={1000}
+        title="Task malumotlari"
+        open={taskID ? true : false}
+        onClose={() => setTaskID(null)}
+      >
+        <div>
+          <div>
+            <h2>Topshiriq matni</h2>
+            {taskDetail?.text ? (
+              <p style={{ marginTop: 12 }}>{taskDetail?.text}</p>
+            ) : (
+              <Empty description="Mavjud emas" />
+            )}
+          </div>
+
+          <div style={{ marginTop: 16 }}>
+            <h2>Topshiriq media fayl</h2>
+            {taskDetail?.media_file ? (
+              renderMediaByUrl(taskDetail?.media_file)
+            ) : (
+              <Empty description="Mavjud emas" />
+            )}
+          </div>
+
+          <div style={{ marginTop: 16 }}>
+            <h2>Natija matni</h2>
+            {taskDetail?.result_text ? (
+              <p style={{ marginTop: 12 }}>{taskDetail?.result_text}</p>
+            ) : (
+              <Empty description="Mavjud emas" />
+            )}
+          </div>
+
+          <div style={{ marginTop: 16 }}>
+            <h2>Natija media</h2>
+            {taskDetail?.result_media_file ? (
+              renderMediaByUrl(taskDetail?.result_media_file)
+            ) : (
+              <Empty description="Mavjud emas" />
+            )}
+          </div>
+
+          <div style={{ marginTop: 16 }}>
+            <h2>Feedback matni</h2>
+            {taskDetail?.feedback_text ? (
+              <p style={{ marginTop: 12 }}>{taskDetail?.feedback_text}</p>
+            ) : (
+              <Empty description="Mavjud emas" />
+            )}
+          </div>
+
+          <div style={{ marginTop: 16 }}>
+            <h2>Feedback media</h2>
+            {taskDetail?.feedback_media_file ? (
+              renderMediaByUrl(taskDetail?.feedback_media_file)
+            ) : (
+              <Empty description="Mavjud emas" />
+            )}
+          </div>
+        </div>
+      </Drawer>
     </Layout>
   );
 };
 
 export default HomePage;
+
+const renderMediaByUrl = (url: string): JSX.Element => {
+  const videoTypes = ['.mp4', '.webm'];
+  const audioTypes = ['.mp3', '.ogg'];
+
+  const isVideo = videoTypes.some((ext) => url.endsWith(ext));
+  const isAudio = audioTypes.some((ext) => url.endsWith(ext));
+
+  if (isVideo) {
+    return (
+      <video controls width="100%" height="360" style={{ marginTop: 12 }}>
+        <source src={url} />
+        Sizning brauzeringiz video formatini qo‘llab-quvvatlamaydi.
+      </video>
+    );
+  } else if (isAudio) {
+    return (
+      <audio controls style={{ marginTop: 12, width: '100%' }}>
+        <source src={url} />
+        Sizning brauzeringiz audio formatini qo‘llab-quvvatlamaydi.
+      </audio>
+    );
+  } else {
+    return (
+      <p style={{ marginTop: 12 }}>
+        Fayl formati qo‘llab-quvvatlanmaydi: {url}
+      </p>
+    );
+  }
+};
