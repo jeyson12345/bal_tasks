@@ -3,9 +3,9 @@ import {
   Drawer,
   Empty,
   Flex,
-  Input,
   Layout,
   Menu,
+  Segmented,
   Select,
   Table,
   theme,
@@ -161,14 +161,33 @@ const HomePage = ({ taskPage = false }: { taskPage?: boolean }) => {
             overflowY: 'scroll',
           }}
         >
-          <Flex justify="end" gap={16} style={{ marginBottom: 16 }}>
-            <Input.Search
+          <Flex
+            justify="end"
+            gap={16}
+            style={{ marginBottom: 16 }}
+            align="center"
+          >
+            {/* <Input.Search
               placeholder={`Matnlar, feedbacklar bo'yich qidirish`}
               enterButton="Qidirish"
               onSearch={(val) => handleMakeParams('search', val)}
               defaultValue={searchParams.get('search') || ''}
               allowClear
-            />
+            /> */}
+
+            <div style={{ flexGrow: 1 }}>
+              <Segmented
+                size="large"
+                options={[
+                  { label: 'Yangi', value: 'new' },
+                  { label: 'Jarayonda', value: 'in_progress' },
+                  { label: 'Yakunlandi', value: 'completed' },
+                  { label: 'Bekor qilindi', value: 'cancelled ' },
+                ]}
+                value={searchParams.get('status') || ''}
+                onChange={(val) => handleMakeParams('status', val)}
+              />
+            </div>
 
             <Select
               allowClear
@@ -192,20 +211,6 @@ const HomePage = ({ taskPage = false }: { taskPage?: boolean }) => {
                 label: item?.full_name,
                 value: item?.id,
               }))}
-            />
-
-            <Select
-              allowClear
-              placeholder="Statusni tanlang !"
-              onChange={(val) => handleMakeParams('status', val)}
-              style={{ width: 200, flexShrink: 0 }}
-              defaultValue={searchParams.get('status')}
-              options={[
-                { label: 'Yangi', value: 'new' },
-                { label: 'Jarayonda', value: 'in_progress' },
-                { label: 'Yakunlandi', value: 'completed' },
-                { label: 'Bekor qilindi', value: 'cancelled ' },
-              ]}
             />
           </Flex>
 
